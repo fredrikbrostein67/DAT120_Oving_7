@@ -7,7 +7,7 @@ filnavn = "CSV_fil_Vær_2014_2024/sinnes_2014_2025.csv"
 
 
 
-årstall = "2014" #(input("Skriv inn et årstall: "))
+årstall = input("Skriv inn et årstall: ").strip()
 
 
 
@@ -59,8 +59,8 @@ try:
         liste_dato_vind = list(range(0, len(liste_vind)))
         liste_dato_snø = list(range(0, len(liste_snødybde)))
 
-        print(liste_dato_datetime)
-        print(liste_temperatur)
+        #print(liste_dato_datetime)
+        #print(liste_temperatur)
 
     
         
@@ -78,12 +78,12 @@ except FileNotFoundError:
 #fig, (plot3, plot4) = plt.subplots(2, 1, figsize=(15, 7))
 
 #--------------------------------- Temperatur ------------------------------------
-plot1.plot(liste_dato_datetime, liste_temperatur, marker="", color="tab:red")
-plot1.set_title("Temperatur")
-plot1.set_ylabel("Antall grader")
-plot1.xaxis.set_major_locator(mdates.MonthLocator())
-plot1.xaxis.set_major_formatter(mdates.DateFormatter("%b"))
-plot1.grid(True)
+#plot1.plot(liste_dato_datetime, liste_temperatur, marker="", color="tab:red")
+#plot1.set_title("Temperatur")
+#plot1.set_ylabel("Antall grader")
+#plot1.xaxis.set_major_locator(mdates.MonthLocator())
+#plot1.xaxis.set_major_formatter(mdates.DateFormatter("%b"))
+#plot1.grid(True)
 
 #---------------------------------- Nedbør ---------------------------------------
 # plot2.plot(liste_dato_nedbør, liste_nedbør, marker="", color="tab:blue")
@@ -112,9 +112,9 @@ plot1.grid(True)
 
 
 
-fig.suptitle(f"Vær")
-plt.tight_layout()
-plt.show()
+#fig.suptitle(f"Vær")
+#plt.tight_layout()
+#plt.show()
 
 
 #Oppgave d)
@@ -127,11 +127,42 @@ plt.show()
 
 
 
+def skifore(filnavn, årstall):
+    årstall = int(årstall)
+
+    start = datetime(årstall - 1, 11, 1)
+    slutt = datetime(årstall, 5, 31)
+    antall = 0
+
+    with open(filnavn, "r", encoding="utf-8-sig") as csv_fil:
+        next(csv_fil)  # Hopper over første linja
 
 
 
+        for linje in csv_fil:
+            deler = linje.strip().split(";")
 
+            # Hopper over linjer med feil. quwgdi
+            if len(deler) < 7 or not deler[2].strip():
+                continue
 
+            dato = datetime.strptime(deler[2], "%d.%m.%Y")
 
+            if start <= dato <= slutt:
+                snøtekst = deler[6].strip()
 
+                # Hopper over manglande snømålinga
+                if snøtekst in ("", "-"):
+                    continue
 
+                snødybde = float(snøtekst.replace(",", "."))
+
+                if snødybde >= 20:
+                    antall += 1
+
+    return antall
+print("hello")
+
+antall = skifore(filnavn, årstall)
+
+print(f"Skisesongen {årstall}: {antall} registrerte dager med skiføre.")
