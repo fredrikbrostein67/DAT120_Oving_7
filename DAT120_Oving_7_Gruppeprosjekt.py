@@ -6,18 +6,22 @@ import matplotlib.dates as mdates
 filnavn = "CSV_fil_Vær_2014_2024/sinnes_2014_2025.csv"
 
 
-
-årstall = input("Skriv inn et årstall mellom 2014 til 2025: ")
-
 input_godkjent = False
 while input_godkjent == False:
     try: 
+        årstall = input("Skriv inn et årstall mellom 2014 til 2025: ")
         årstall_int = int(årstall)
+
         if årstall_int >= 2014 and årstall_int <= 2025:
-            input_godkjent = True
+            input_godkjent = True 
+        else:
+            print("Magnler data på det årstallet. ")
+            print("årstall mellom 2014 og 2025: ")
+            continue
 
     except ValueError:
-        print("Årstall er ikke innenfor range")
+        print("Årstall er godkjent tall")
+        continue
  
 
 
@@ -78,13 +82,23 @@ except FileNotFoundError:
 
 
 #--------------------------- AI hjelp for sortering --------------------------------
-#sortert = sorted(zip(liste_dato_nedbør_datetime))
-#liste_dato_nedbør_datetime = [rad[0] for rad in sortert]
+sortert = sorted(zip(liste_dato_temp_datetime))
+liste_dato_temp_datetime = [rad[0] for rad in sortert]
+
+sortert = sorted(zip(liste_dato_nedbør_datetime))
+liste_dato_nedbør_datetime = [rad[0] for rad in sortert]
+
+sortert = sorted(zip(liste_dato_vind_datetime))
+liste_dato_vind_datetime = [rad[0] for rad in sortert]
+
+sortert = sorted(zip(liste_dato_snø_datetime))
+liste_dato_snø_datetime = [rad[0] for rad in sortert]
 
 
+#-----------------------------------------------------------------------------------
 
-fig, (plot1) = plt.subplots(1, 1, figsize=(15, 7)) #(plot1, plot2) = plt.subplots(2, 1, figsize=(15, 7))
-#fig, (plot3, plot4) = plt.subplots(2, 1, figsize=(15, 7))
+fig, (plot1, plot2) = plt.subplots(2, 1, figsize=(15, 7))
+fig, (plot3, plot4) = plt.subplots(2, 1, figsize=(15, 7))
 
 #--------------------------------- Temperatur ------------------------------------
 plot1.plot(liste_dato_temp_datetime, liste_temperatur, marker="", color="tab:red")
@@ -95,26 +109,27 @@ plot1.xaxis.set_major_formatter(mdates.DateFormatter("%b"))
 plot1.grid(True)
 
 #---------------------------------- Nedbør ---------------------------------------
-# plot2.plot(liste_dato_nedbør_datetime, liste_nedbør, marker="", color="tab:blue")
-# plot2.set_title("Nedbør")
-# plot2.set_ylabel("Antall grader")
-# plot2.xaxis.set_major_locator(mdates.MonthLocator())
-# plot2.xaxis.set_major_formatter(mdates.DateFormatter("%b"))
-# plot2.grid(True)
+plot2.plot(liste_dato_nedbør_datetime, liste_nedbør, marker="", color="tab:blue")
+plot2.set_title("Nedbør")
+plot2.set_ylabel("Antall grader")
+plot2.xaxis.set_major_locator(mdates.MonthLocator())
+plot2.xaxis.set_major_formatter(mdates.DateFormatter("%b"))
+plot2.grid(True)
 
 #--------------------------------- Vind ----------------------------------------
-# plot3.set_title("Vind")
-# plot3.set_ylabel("Antall grader")
-# plot3.set_xticks(range(0, 366, 30))
-# plot3.grid(True)
-
+plot3.plot(liste_dato_vind_datetime, liste_vind, marker="", color="tab:blue")
+plot3.set_title("Vind")
+plot3.set_ylabel("meter per sekund")
+plot3.xaxis.set_major_locator(mdates.MonthLocator())
+plot3.xaxis.set_major_formatter(mdates.DateFormatter("%b"))
+plot3.grid(True)
 #----------------------------------- Snø ---------------------------------------
-# plot4.plot(liste_dato_snø, liste_snødybde, marker="", color="tab:blue")
-# plot4.set_title("Snø")
-# plot4.set_xlabel(årstall)
-# plot4.set_ylabel("Antall grader")
-# plot4.set_xticks(range(0, 366, 30))
-# plot4.grid(True)
+plot4.plot(liste_dato_snø_datetime, liste_snødybde, marker="", color="tab:blue")
+plot4.set_title("Snø")
+plot4.set_ylabel("mm Snø")
+plot4.xaxis.set_major_locator(mdates.MonthLocator())
+plot4.xaxis.set_major_formatter(mdates.DateFormatter("%b"))
+plot4.grid(True)
 
 # #-------------------------------------------------------------------------------
 
@@ -124,15 +139,6 @@ plt.show()
 
 #--------------------------------------------------------------------------------------------------------
 #---------------------------------------- Sommerdager -------------------------------------------------
-#Tell antall: i det aktuelle året og skriv ut dette:
-# sommerdager
-# høysommerdager
-# tropedager
-# En sommerdag er en dag med maksimaltemperatur over 20 grader
-# En høysommerdag har maksimalteperatur over 25 grader
-# Trope har masksimaltemperatur over 30 grader.
-
-
 sommerdager = 0
 høysommerdager = 0
 tropedager = 0
@@ -145,7 +151,11 @@ for element in liste_temperatur:
     if element >= 30.0:
         tropedagerdager += 1
 
-print(sommerdager, høysommerdager, tropedager)
+print(f"""
+Antall Sommerdager er: {sommerdager} stk
+Antall Høysommerdager er: {høysommerdager} stk
+Antall Tropedager er: {tropedager} stk""")
+
 #-----------------------------------------------------------------------------------------------------------------------------------
 def skifore(filnavn, årstall):
     årstall = int(årstall)
@@ -181,7 +191,6 @@ def skifore(filnavn, årstall):
                     antall += 1
 
     return antall
-print("hello")
 
 antall = skifore(filnavn, årstall)
 
