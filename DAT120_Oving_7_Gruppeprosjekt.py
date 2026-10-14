@@ -203,3 +203,87 @@ for temperatur in liste_temperatur:
         plantevekst += temperatur - 5
 
 print(f"Total plantevekst i {årstall}: {plantevekst:.2f}")
+
+
+
+
+
+##---------------- Oppgave G: Lengste periode uten nedbør ----------------
+
+from datetime import timedelta
+
+def lengste_periode_uten_nedbor(filnavn, årstall):
+    lengste = 0
+    antall = 0
+    startdato = None
+    beste_start = None
+    beste_slutt = None
+    forrige_dato = None
+
+    nedbor_data = []
+
+    with open(filnavn, "r", encoding="utf-8-sig") as csv_fil:
+        next(csv_fil)
+
+        for linje in csv_fil:
+            deler = linje.strip().split(";")
+
+            if len(deler) < 5:
+                continue
+
+            try:
+                dato = datetime.strptime(deler[2].strip(), "%d.%m.%Y")
+            except ValueError:
+                continue
+
+            if dato.year != int(årstall):
+                continue
+
+            nedbor_tekst = deler[4].strip()
+
+            if nedbor_tekst in ("", "-"):
+                nedbor = None
+            else:
+                try:
+                    nedbor = float(nedbor_tekst.replace(",", "."))
+                except ValueError:
+                    nedbor = None
+
+            nedbor_data.append((dato, nedbor))
+
+    # Sorterer målingene etter dato
+    nedbor_data.sort()
+
+    # Finner lengste sammenhengende periode uten nedbør
+    for dato, nedbor in nedbor_data:
+
+        if nedbor == 0:
+            if antall == 0 or forrige_dato is None or dato - forrige_dato != timedelta(days=1):
+                antall = 1
+                startdato = dato
+            else:
+                antall += 1
+
+            if antall > lengste:
+                lengste = antall
+                beste_start = startdato
+                beste_slutt = dato
+
+        else:
+            antall = 0
+
+        forrige_dato = dato
+
+    # Skriver ut resultatet
+    print("\n--- Oppgave G: Lengste periode uten nedbør ---")
+
+    if lengste > 0:
+        print(f"Lengste periode: {lengste} dager")
+        print(f"Startdato: {beste_start.strftime('%d.%m.%Y')}")
+        print(f"Sluttdato: {beste_slutt.strftime('%d.%m.%Y')}")
+    else:
+        print("Ingen registrerte dager uten nedbør.")
+
+# Kjører funksjonen
+lengste_periode_uten_nedbor(filnavn, årstall)
+#----------------------------------------------
