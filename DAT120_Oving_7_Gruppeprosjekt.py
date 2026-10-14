@@ -195,3 +195,11 @@ def skifore(filnavn, årstall):
 antall = skifore(filnavn, årstall)
 
 print(f"Skisesongen {årstall}: {antall} registrerte dager med skiføre.")
+#---------------------------------------- Plantevekst -------------------------------------------------
+plantevekst = 0
+
+for temperatur in liste_temperatur:
+    if temperatur >= 5:
+        plantevekst += temperatur - 5
+
+print(f"Total plantevekst i {årstall}: {plantevekst:.2f}")
