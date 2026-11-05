@@ -3,36 +3,31 @@ from datetime import datetime
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 
-filnavn = "CSV_fil_Vær_2014_2024/sinnes_2014_2025.csv"
+filnavn_øving_7 = "CSV_fil_Vær_2014_2024/sinnes_2014_2025.csv"
 
+filnavn_oslo = "Værstasjon_Oving_10/oslo_blindern_1954_2025_med_makstemperatur (2).csv"
+filnavn_røros = "Værstasjon_Oving_10/roeros_1954_2025_med_makstemperatur (2).csv"
+filnavn_tromsø = "Værstasjon_Oving_10/tromsoe_1954_2025_med_makstemperatur (2).csv"
+filnavn_værnes = "Værstasjon_Oving_10/vaernes_1954_2025_med_makstemperatur (2).csv"
+filnavn_venabu = "Værstasjon_Oving_10/venabu_1954_2025_med_makstemperatur (2).csv"
 
-input_godkjent = False
-while input_godkjent == False:
-    try: 
-        årstall = input("Skriv inn et årstall mellom 2014 til 2025: ")
-        årstall_int = int(årstall)
-
-        if årstall_int >= 2014 and årstall_int <= 2025:
-            input_godkjent = True 
-        else:
-            print("Magnler data på det årstallet. ")
-            print("årstall mellom 2014 og 2025: ")
-            continue
-
-    except ValueError:
-        print("Årstall er godkjent tall")
-        continue
- 
 
 
 #------------------------------------------------ ----------- Fredrik ---------------------------------------------------------------------------
 liste_placeholder = []
+placeholder_temp_max = []
+placeholder_temp_min = []
+placeholder_nedbør_total = []
+placeholder_vind_max = []
+placeholder_snø_max = []
+
 liste_snødybde = []
-liste_nedbør = []
-liste_temperatur = []
+liste_total_nedbør = []
+liste_temp_max = []
+liste_temp_min = []
 liste_vind = []
 
-liste_dato_temp_datetime = []
+liste_dato_datetime = []
 liste_dato_nedbør_datetime = []
 liste_dato_vind_datetime = []
 liste_dato_snø_datetime = []
@@ -40,10 +35,21 @@ liste_dato_snø_datetime = []
 
 
 første_scan = True
+første_lesing = True
+
+månedliste = []
+måned = 1
+forrige_scan_måned = 1
+ugyldig_lesing = 0
+
+
+
+
 
 try:
-    with open(filnavn, "r", encoding="UTF-8") as csv_fil:
+    with open(filnavn_oslo, "r", encoding="UTF-8") as csv_fil:
         for linje in csv_fil:
+
             if første_scan:   #Ikke les første linje, her er det kun forklaringstekst
                 første_scan = False
                 continue
@@ -51,29 +57,127 @@ try:
             linje_stripped = linje.strip()
             liste_placeholder = (linje_stripped.split(";"))
 
-            if årstall in liste_placeholder[2]:
+            if len(liste_placeholder) == 1:
+                continue
 
-                if not liste_placeholder[3] == "-":
-                    liste_temperatur.append(float(liste_placeholder[3].replace(",", "." , )))
-                    date_obj = datetime.strptime(liste_placeholder[2], '%d.%m.%Y')
-                    liste_dato_temp_datetime.append(date_obj)
+            månedliste = liste_placeholder[2].split(".")
 
+            try:
+                måned = månedliste[1]
+            except IndexError:
+                continue
+
+
+            if not liste_placeholder[4] == "-" and not liste_placeholder[4] == '':    #Max og min temp
+                placeholder_temp_max.append(float(liste_placeholder[4].replace(",", ".")))
+                placeholder_temp_min.append(float(liste_placeholder[4].replace(",", ".")))
+
+
+
+            if liste_placeholder[5] == "-":
+                ugyldig_lesing += 1
+                placeholder_nedbør_total.append(0.0)
+
+
+
+            elif not liste_placeholder[5] == "-" and not liste_placeholder[5] == '':    #Total Nedbør
+                placeholder_nedbør_total.append(float(liste_placeholder[5].replace(",", ".")))
+
+
+            if not liste_placeholder[6] == "-" and not liste_placeholder[6] == '':    #Max vind
+                placeholder_vind_max.append(float(liste_placeholder[6].replace(",", ".")))
+
+            if not liste_placeholder[7] == "-" and not liste_placeholder[7] == '':    #Max snødybde
+                placeholder_snø_max.append(float(liste_placeholder[7].replace(",", ".")))
+            elif liste_placeholder[7] == "-" or liste_placeholder[7] == '':
+                placeholder_snø_max.append(0.0)
+            
+
+          
+
+            if måned != forrige_scan_måned and not første_lesing: 
+                if len(placeholder_temp_max) == 0:
+                    liste_temp_max.append(0)
+                else:
+                    liste_temp_max.append(max(placeholder_temp_max))
                 
-                if not liste_placeholder[4] == "-":
-                    liste_nedbør.append(float(liste_placeholder[4].replace(",", "." , )))  
-                    date_obj = datetime.strptime(liste_placeholder[2], '%d.%m.%Y')
-                    liste_dato_nedbør_datetime.append(date_obj)
 
-                if not liste_placeholder[5] == "-":
-                    liste_vind.append(float(liste_placeholder[5].replace(",", "." , )))
-                    date_obj = datetime.strptime(liste_placeholder[2], '%d.%m.%Y')
-                    liste_dato_vind_datetime.append(date_obj)
+                if len(placeholder_temp_min) == 0:
+                    liste_temp_min.append(0)
+                else:
+                    liste_temp_min.append(max(placeholder_temp_min))
 
-                if not liste_placeholder[6] == "-":
-                    liste_snødybde.append(float(liste_placeholder[6].replace(",", "." , )))
-                    date_obj = datetime.strptime(liste_placeholder[2], '%d.%m.%Y')
-                    liste_dato_snø_datetime.append(date_obj)
 
+
+
+                if ugyldig_lesing > 20:
+                    liste_total_nedbør.append(0)
+                else:
+                    liste_total_nedbør.append(sum(placeholder_nedbør_total))
+
+
+
+
+                if len(placeholder_vind_max) == 0:
+                    liste_vind.append(0)
+                else:
+                    liste_vind.append(max(placeholder_vind_max))
+
+
+
+                if len(placeholder_snø_max) == 0:
+                    liste_snødybde.append(0)
+                else:
+                    liste_snødybde.append(max(placeholder_snø_max))
+
+                ugyldig_lesing = 0
+
+                placeholder_temp_max = []
+                placeholder_temp_min = []
+                placeholder_nedbør_total = []
+                placeholder_vind_max = []
+                placeholder_snø_max = []
+
+
+
+
+                liste_dato_datetime.append(forrige_dato.replace(day=1))
+
+            
+
+
+
+            første_lesing = False
+            forrige_scan_måned = måned
+            forrige_dato = datetime.strptime(liste_placeholder[2], '%d.%m.%Y')
+
+
+    if len(placeholder_temp_max) == 0:
+        liste_temp_max.append(0)
+    else:
+        liste_temp_max.append(max(placeholder_temp_max))
+                    
+    
+    if len(placeholder_temp_min) == 0:
+        liste_temp_min.append(0)
+    else:
+        liste_temp_min.append(max(placeholder_temp_min))
+                        
+    
+    if ugyldig_lesing > 20:
+        liste_total_nedbør.append(0)
+    else:
+        liste_total_nedbør.append(sum(placeholder_nedbør_total))
+
+
+    if len(placeholder_vind_max) == 0:
+        liste_vind.append(0)
+    else:
+        liste_vind.append(max(placeholder_vind_max))
+
+    liste_snødybde.append(max(placeholder_snø_max))
+    liste_dato_datetime.append(forrige_dato.replace(day=1))
+            
 
             
 
@@ -81,63 +185,64 @@ except FileNotFoundError:
     print("Fil finnes ikke: ")
 
 
+
 #--------------------------- AI hjelp for sortering --------------------------------
-sortert = sorted(zip(liste_dato_temp_datetime))
-liste_dato_temp_datetime = [rad[0] for rad in sortert]
-
-sortert = sorted(zip(liste_dato_nedbør_datetime))
-liste_dato_nedbør_datetime = [rad[0] for rad in sortert]
-
-sortert = sorted(zip(liste_dato_vind_datetime))
-liste_dato_vind_datetime = [rad[0] for rad in sortert]
-
-sortert = sorted(zip(liste_dato_snø_datetime))
-liste_dato_snø_datetime = [rad[0] for rad in sortert]
-
-
+sortert = sorted(zip(liste_dato_datetime))
+liste_dato_datetime = [rad[0] for rad in sortert]
 #-----------------------------------------------------------------------------------
 
-fig, (plot1, plot2) = plt.subplots(2, 1, figsize=(15, 7))
-fig, (plot3, plot4) = plt.subplots(2, 1, figsize=(15, 7))
+fig, (plot1, plot2) = plt.subplots(2, 1, figsize=(15, 10))
+fig, (plot3, plot4) = plt.subplots(2, 1, figsize=(15, 10))
+fig, (plot5) = plt.subplots(1, 1, figsize=(15, 10))
 
 #--------------------------------- Temperatur ------------------------------------
-plot1.plot(liste_dato_temp_datetime, liste_temperatur, marker="", color="tab:red")
-plot1.set_title("Temperatur")
+plot1.plot(liste_dato_datetime, liste_temp_max, marker="", color="tab:red")
+plot1.set_title("Maks Temperatur")
 plot1.set_ylabel("Antall grader")
-plot1.xaxis.set_major_locator(mdates.MonthLocator())
-plot1.xaxis.set_major_formatter(mdates.DateFormatter("%b"))
+plot1.xaxis.set_major_locator(mdates.YearLocator())
+plot1.xaxis.set_major_formatter(mdates.DateFormatter("%Y"))
 plot1.grid(True)
 
-#---------------------------------- Nedbør ---------------------------------------
-plot2.plot(liste_dato_nedbør_datetime, liste_nedbør, marker="", color="tab:blue")
-plot2.set_title("Nedbør")
+plot2.plot(liste_dato_datetime, liste_temp_min, marker="", color="tab:blue")
+plot2.set_title("Min Temperatur")
 plot2.set_ylabel("Antall grader")
-plot2.xaxis.set_major_locator(mdates.MonthLocator())
-plot2.xaxis.set_major_formatter(mdates.DateFormatter("%b"))
+plot2.xaxis.set_major_locator(mdates.YearLocator())
+plot2.xaxis.set_major_formatter(mdates.DateFormatter("%Y"))
 plot2.grid(True)
 
-#--------------------------------- Vind ----------------------------------------
-plot3.plot(liste_dato_vind_datetime, liste_vind, marker="", color="tab:blue")
-plot3.set_title("Vind")
-plot3.set_ylabel("meter per sekund")
-plot3.xaxis.set_major_locator(mdates.MonthLocator())
-plot3.xaxis.set_major_formatter(mdates.DateFormatter("%b"))
+plot3.plot(liste_dato_datetime, liste_total_nedbør, marker="", color="tab:blue")
+plot3.set_title("Total Nedbør")
+plot3.set_ylabel("mm")
+plot3.xaxis.set_major_locator(mdates.YearLocator())
+plot3.xaxis.set_major_formatter(mdates.DateFormatter("%Y"))
 plot3.grid(True)
-#----------------------------------- Snø ---------------------------------------
-plot4.plot(liste_dato_snø_datetime, liste_snødybde, marker="", color="tab:blue")
-plot4.set_title("Snø")
-plot4.set_ylabel("mm Snø")
-plot4.xaxis.set_major_locator(mdates.MonthLocator())
-plot4.xaxis.set_major_formatter(mdates.DateFormatter("%b"))
+
+plot4.plot(liste_dato_datetime, liste_vind, marker="", color="tab:green")
+plot4.set_title("Maks Vind")
+plot4.set_ylabel("m/s")
+plot4.xaxis.set_major_locator(mdates.YearLocator())
+plot4.xaxis.set_major_formatter(mdates.DateFormatter("%Y"))
 plot4.grid(True)
 
-# #-------------------------------------------------------------------------------
+plot5.plot(liste_dato_datetime, liste_snødybde, marker="", color="tab:blue")
+plot5.set_title("Maks snødybde")
+plot5.set_ylabel("mm")
+plot5.xaxis.set_major_locator(mdates.YearLocator())
+plot5.xaxis.set_major_formatter(mdates.DateFormatter("%Y"))
+plot5.grid(True)
 
-fig.suptitle(f"Vær")
+
+
 plt.tight_layout()
 plt.show()
 
-#--------------------------------------------------------------------------------------------------------
+
+
+
+
+
+
+
 #---------------------------------------- Sommerdager -------------------------------------------------
 sommerdager = 0
 høysommerdager = 0
@@ -208,7 +313,7 @@ print(f"Total plantevekst i {årstall}: {plantevekst:.2f}")
 
 
 
-##---------------- Oppgave G: Lengste periode uten nedbør ----------------
+#---------------- Oppgave G: Lengste periode uten nedbør ----------------
 
 from datetime import timedelta
 
