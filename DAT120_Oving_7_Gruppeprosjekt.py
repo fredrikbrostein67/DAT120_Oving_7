@@ -231,6 +231,104 @@ plot5.xaxis.set_major_locator(mdates.YearLocator())
 plot5.xaxis.set_major_formatter(mdates.DateFormatter("%Y"))
 plot5.grid(True)
 
+# ---------------- Oppgave e: Skisesonger ----------------
+
+def skisesonger(filnavn):
+    sesonger = {}
+
+    with open(filnavn, "r", encoding="utf-8-sig") as csv_fil:
+        overskrift = next(csv_fil).strip().split(";")
+        snøkolonne = overskrift.index("Snødybde")
+
+        for linje in csv_fil:
+            deler = linje.strip().split(";")
+
+            if len(deler) <= snøkolonne:
+                continue
+
+            try:
+                dato = datetime.strptime(deler[2].strip(), "%d.%m.%Y")
+            except ValueError:
+                continue  # Hopper over forklaringsteksten nederst i fila.
+
+            # Sesongen får årstallet til året den slutter i.
+            if dato.month >= 11:
+                sesong = dato.year + 1
+            elif dato.month <= 5:
+                sesong = dato.year
+            else:
+                continue  # Juni til oktober er utenfor skisesongen.
+
+            if sesong not in sesonger:
+                sesonger[sesong] = {}
+
+            snøtekst = deler[snøkolonne].strip()
+
+            if snøtekst in ("", "-"):
+                continue  # Manglende målinger teller ikke som gyldige dager.
+
+            # Hver dato lagres bare én gang.
+            sesonger[sesong][dato] = float(snøtekst.replace(",", "."))
+
+    årstall = []
+    skidager = []
+
+    if not sesonger:
+        return årstall, skidager
+
+    for år in range(min(sesonger), max(sesonger) + 1):
+        start = datetime(år - 1, 11, 1)
+        slutt = datetime(år, 5, 31)
+
+        # +1 gjør at både første og siste dag telles med.
+        dager_i_sesongen = (slutt - start).days + 1
+        målinger = sesonger.get(år, {})
+
+        årstall.append(år)
+
+        if len(målinger) >= dager_i_sesongen / 2:
+            antall = 0
+
+            for snødybde in målinger.values():
+                if snødybde >= 20:
+                    antall += 1
+
+            skidager.append(antall)
+        else:
+            # Gir et hull i kurven når sesongen har for lite data.
+            skidager.append(float("nan"))
+
+    return årstall, skidager
+
+
+værstasjoner = {
+    "Oslo Blindern": filnavn_oslo,
+    "Røros": filnavn_røros,
+    "Tromsø": filnavn_tromsø,
+    "Værnes": filnavn_værnes,
+    "Venabu": filnavn_venabu,
+    "Sinnes": filnavn_øving_7,
+}
+
+fig_ski, akse_ski = plt.subplots(figsize=(12, 6))
+
+for navn, filnavn_stasjon in værstasjoner.items():
+    sesongår, antall_skidager = skisesonger(filnavn_stasjon)
+
+    akse_ski.plot(
+        sesongår,
+        antall_skidager,
+        marker=".",
+        label=navn
+    )
+
+akse_ski.set_title("Dager med skiføre per skisesong – minst 20 cm snø")
+akse_ski.set_xlabel("Året sesongen slutter (november året før–mai)")
+akse_ski.set_ylabel("Registrerte dager med skiføre")
+akse_ski.set_ylim(bottom=0)
+akse_ski.grid(True, alpha=0.3)
+akse_ski.legend()
+
 
 
 plt.tight_layout()
@@ -244,151 +342,114 @@ plt.show()
 
 
 #---------------------------------------- Sommerdager -------------------------------------------------
-sommerdager = 0
-høysommerdager = 0
-tropedager = 0
+# sommerdager = 0
+# høysommerdager = 0
+# tropedager = 0
 
-for element in liste_temperatur:
-    if element >= 20.0 and not element >= 25.0:
-        sommerdager += 1
-    if element >= 25.0 and not element >= 30.0:
-        høysommerdager += 1
-    if element >= 30.0:
-        tropedagerdager += 1
+# for element in liste_temperatur:
+#     if element >= 20.0 and not element >= 25.0:
+#         sommerdager += 1
+#     if element >= 25.0 and not element >= 30.0:
+#         høysommerdager += 1
+#     if element >= 30.0:
+#         tropedagerdager += 1
 
-print(f"""
-Antall Sommerdager er: {sommerdager} stk
-Antall Høysommerdager er: {høysommerdager} stk
-Antall Tropedager er: {tropedager} stk""")
+# print(f"""
+# Antall Sommerdager er: {sommerdager} stk
+# Antall Høysommerdager er: {høysommerdager} stk
+# Antall Tropedager er: {tropedager} stk""")
 
-#-----------------------------------------------------------------------------------------------------------------------------------
-def skifore(filnavn, årstall):
-    årstall = int(årstall)
+# #-----------------------------------------------------------------------------------------------------------------------------------
 
-    start = datetime(årstall - 1, 11, 1)
-    slutt = datetime(årstall, 5, 31)
-    antall = 0
+# #---------------------------------------- Plantevekst -------------------------------------------------
+# plantevekst = 0
 
-    with open(filnavn, "r", encoding="utf-8-sig") as csv_fil:
-        next(csv_fil)  # Hopper over første linja
+# for temperatur in liste_temperatur:
+#     if temperatur >= 5:
+#         plantevekst += temperatur - 5
 
-
-
-        for linje in csv_fil:
-            deler = linje.strip().split(";")
-
-            # Hopper over linjer med feil. quwgdi
-            if len(deler) < 7 or not deler[2].strip():
-                continue
-
-            dato = datetime.strptime(deler[2], "%d.%m.%Y")
-
-            if start <= dato <= slutt:
-                snøtekst = deler[6].strip()
-
-                # Hopper over manglande snømålinga
-                if snøtekst in ("", "-"):
-                    continue
-
-                snødybde = float(snøtekst.replace(",", "."))
-
-                if snødybde >= 20:
-                    antall += 1
-
-    return antall
-
-antall = skifore(filnavn, årstall)
-
-print(f"Skisesongen {årstall}: {antall} registrerte dager med skiføre.")
-#---------------------------------------- Plantevekst -------------------------------------------------
-plantevekst = 0
-
-for temperatur in liste_temperatur:
-    if temperatur >= 5:
-        plantevekst += temperatur - 5
-
-print(f"Total plantevekst i {årstall}: {plantevekst:.2f}")
+# print(f"Total plantevekst i {årstall}: {plantevekst:.2f}")
 
 
 
 
 
-#---------------- Oppgave G: Lengste periode uten nedbør ----------------
+# #---------------- Oppgave G: Lengste periode uten nedbør ----------------
 
-from datetime import timedelta
+# from datetime import timedelta
 
-def lengste_periode_uten_nedbor(filnavn, årstall):
-    lengste = 0
-    antall = 0
-    startdato = None
-    beste_start = None
-    beste_slutt = None
-    forrige_dato = None
+# def lengste_periode_uten_nedbor(filnavn, årstall):
+#     lengste = 0
+#     antall = 0
+#     startdato = None
+#     beste_start = None
+#     beste_slutt = None
+#     forrige_dato = None
 
-    nedbor_data = []
+#     nedbor_data = []
 
-    with open(filnavn, "r", encoding="utf-8-sig") as csv_fil:
-        next(csv_fil)
+#     with open(filnavn, "r", encoding="utf-8-sig") as csv_fil:
+#         next(csv_fil)
 
-        for linje in csv_fil:
-            deler = linje.strip().split(";")
+#         for linje in csv_fil:
+#             deler = linje.strip().split(";")
 
-            if len(deler) < 5:
-                continue
+#             if len(deler) < 5:
+#                 continue
 
-            try:
-                dato = datetime.strptime(deler[2].strip(), "%d.%m.%Y")
-            except ValueError:
-                continue
+#             try:
+#                 dato = datetime.strptime(deler[2].strip(), "%d.%m.%Y")
+#             except ValueError:
+#                 continue
 
-            if dato.year != int(årstall):
-                continue
+#             if dato.year != int(årstall):
+#                 continue
 
-            nedbor_tekst = deler[4].strip()
+#             nedbor_tekst = deler[4].strip()
 
-            if nedbor_tekst in ("", "-"):
-                nedbor = None
-            else:
-                try:
-                    nedbor = float(nedbor_tekst.replace(",", "."))
-                except ValueError:
-                    nedbor = None
+#             if nedbor_tekst in ("", "-"):
+#                 nedbor = None
+#             else:
+#                 try:
+#                     nedbor = float(nedbor_tekst.replace(",", "."))
+#                 except ValueError:
+#                     nedbor = None
 
-            nedbor_data.append((dato, nedbor))
+#             nedbor_data.append((dato, nedbor))
 
-    # Sorterer målingene etter dato
-    nedbor_data.sort()
+#     # Sorterer målingene etter dato
+#     nedbor_data.sort()
 
-    # Finner lengste sammenhengende periode uten nedbør
-    for dato, nedbor in nedbor_data:
+#     # Finner lengste sammenhengende periode uten nedbør
+#     for dato, nedbor in nedbor_data:
 
-        if nedbor == 0:
-            if antall == 0 or forrige_dato is None or dato - forrige_dato != timedelta(days=1):
-                antall = 1
-                startdato = dato
-            else:
-                antall += 1
+#         if nedbor == 0:
+#             if antall == 0 or forrige_dato is None or dato - forrige_dato != timedelta(days=1):
+#                 antall = 1
+#                 startdato = dato
+#             else:
+#                 antall += 1
 
-            if antall > lengste:
-                lengste = antall
-                beste_start = startdato
-                beste_slutt = dato
+#             if antall > lengste:
+#                 lengste = antall
+#                 beste_start = startdato
+#                 beste_slutt = dato
 
-        else:
-            antall = 0
+#         else:
+#             antall = 0
 
-        forrige_dato = dato
+#         forrige_dato = dato
 
-    # Skriver ut resultatet
-    print("\n--- Oppgave G: Lengste periode uten nedbør ---")
+#     # Skriver ut resultatet
+#     print("\n--- Oppgave G: Lengste periode uten nedbør ---")
 
-    if lengste > 0:
-        print(f"Lengste periode: {lengste} dager")
-        print(f"Startdato: {beste_start.strftime('%d.%m.%Y')}")
-        print(f"Sluttdato: {beste_slutt.strftime('%d.%m.%Y')}")
-    else:
-        print("Ingen registrerte dager uten nedbør.")
+#     if lengste > 0:
+#         print(f"Lengste periode: {lengste} dager")
+#         print(f"Startdato: {beste_start.strftime('%d.%m.%Y')}")
+#         print(f"Sluttdato: {beste_slutt.strftime('%d.%m.%Y')}")
+#     else:
+#         print("Ingen registrerte dager uten nedbør.")
 
-# Kjører funksjonen
-lengste_periode_uten_nedbor(filnavn, årstall)
-#----------------------------------------------
+# # Kjører funksjonen
+# lengste_periode_uten_nedbor(filnavn, årstall)
+# #----------------------------------------------
