@@ -230,7 +230,164 @@ plot5.set_ylabel("mm")
 plot5.xaxis.set_major_locator(mdates.YearLocator())
 plot5.xaxis.set_major_formatter(mdates.DateFormatter("%Y"))
 plot5.grid(True)
+# =====================================================================
+# OPPGAVE C - TEMPERATURSAMMENLIKNING
+# =====================================================================
 
+import csv
+
+
+# Bruker filnavnene som allerede er definert i fellesdelen
+værstasjoner_temp = {
+    "Oslo Blindern": filnavn_oslo,
+    "Røros": filnavn_røros,
+    "Tromsø": filnavn_tromsø,
+    "Værnes": filnavn_værnes,
+    "Venabu": filnavn_venabu,
+    "Sinnes": filnavn_øving_7
+}
+
+
+# Leser én værfil og regner ut gjennomsnittstemperaturen for hvert år
+def les_årsgjennomsnitt(filnavn):
+
+    # Her lagres temperaturene sortert etter år
+    temperaturer_per_år = {}
+
+    with open(filnavn, "r", encoding="utf-8-sig") as csv_fil:
+
+        # Leser fila ved hjelp av kolonnenavnene
+        leser = csv.DictReader(csv_fil, delimiter=";")
+
+        # Leser én dag om gangen
+        for rad in leser:
+
+            dato_tekst = rad["Tid(norsk normaltid)"].strip()
+            temperatur_tekst = rad["Middeltemperatur (døgn)"].strip()
+
+            # Hopper over manglende temperaturmålinger
+            if temperatur_tekst == "" or temperatur_tekst == "-":
+                continue
+
+            try:
+                # Gjør datoen om til datetime
+                dato = datetime.strptime(
+                    dato_tekst,
+                    "%d.%m.%Y"
+                )
+
+                # Gjør temperaturen om til float
+                temperatur = float(
+                    temperatur_tekst.replace(",", ".")
+                )
+
+            # Hopper over feilformaterte linjer
+            except ValueError:
+                continue
+
+
+            år = dato.year
+
+
+            # Lager en ny liste hvis året ikke finnes fra før
+            if år not in temperaturer_per_år:
+                temperaturer_per_år[år] = []
+
+
+            # Legger temperaturen inn på riktig år
+            temperaturer_per_år[år].append(temperatur)
+
+
+    # Lister som skal brukes i grafen
+    liste_årstall = []
+    liste_gjennomsnitt_temp = []
+
+
+    # Går gjennom alle år i rekkefølge
+    for år in sorted(temperaturer_per_år):
+
+        temperaturer = temperaturer_per_år[år]
+
+
+        # Oppgaven krever minst 300 gyldige dager
+        if len(temperaturer) >= 300:
+
+            gjennomsnitt_temp = (
+                sum(temperaturer) / len(temperaturer)
+            )
+
+            liste_årstall.append(år)
+            liste_gjennomsnitt_temp.append(
+                gjennomsnitt_temp
+            )
+
+
+    return liste_årstall, liste_gjennomsnitt_temp
+
+
+
+# =====================================================================
+# PLOTTING
+# =====================================================================
+
+# Lager en egen figur bare for oppgave C
+# Dermed påvirker den ikke plottene i de andre deloppgavene
+fig_temp, akse_temp = plt.subplots(
+    figsize=(12, 6)
+)
+
+
+# Går gjennom alle værstasjonene
+for navn, filnavn_stasjon in værstasjoner_temp.items():
+
+    try:
+
+        # Regner ut årsgjennomsnittet for stasjonen
+        årstall_temp, gjennomsnitt_temp = les_årsgjennomsnitt(
+            filnavn_stasjon
+        )
+
+
+        # Lager én kurve for hver værstasjon
+        akse_temp.plot(
+            årstall_temp,
+            gjennomsnitt_temp,
+            label=navn
+        )
+
+
+    except FileNotFoundError:
+
+        print(
+            "Fant ikke filen:",
+            filnavn_stasjon
+        )
+
+
+# Tekst på grafen
+akse_temp.set_title(
+    "Gjennomsnittstemperatur per år"
+)
+
+akse_temp.set_xlabel(
+    "År"
+)
+
+akse_temp.set_ylabel(
+    "Gjennomsnittstemperatur (°C)"
+)
+
+
+# Viser navn på værstasjonene
+akse_temp.legend()
+
+
+# Gjør grafen lettere å lese
+akse_temp.grid(True)
+
+
+# Tilpasser grafen
+plt.tight_layout()
 # ---------------- Oppgave e: Skisesonger ----------------
 
 def skisesonger(filnavn):
