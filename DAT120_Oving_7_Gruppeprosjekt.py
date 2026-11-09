@@ -1,4 +1,5 @@
-#----------------------------------------------------------- Felles -----------------------------------------------------------------------------import csv
+#----------------------------------------------------------- Felles -----------------------------------------------------------------------------
+import csv
 from datetime import datetime
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
@@ -324,9 +325,6 @@ except FileNotFoundError:
 # =====================================================================
 # OPPGAVE C - TEMPERATURSAMMENLIKNING
 # =====================================================================
-
-import csv
-
 
 # Bruker filnavnene som allerede er definert i fellesdelen
 værstasjoner_temp = {
@@ -673,16 +671,8 @@ akse_ski.set_ylim(bottom=0)
 akse_ski.grid(True, alpha=0.3)
 akse_ski.legend()
 
-
-
 plt.tight_layout()
 plt.show()
-
-
-
-
-
-
 
 
 #---------------------------------------- Sommerdager -------------------------------------------------
@@ -713,9 +703,6 @@ plt.show()
 #         plantevekst += temperatur - 5
 
 # print(f"Total plantevekst i {årstall}: {plantevekst:.2f}")
-
-
-
 
 
 # #---------------- Oppgave G: Lengste periode uten nedbør ----------------
