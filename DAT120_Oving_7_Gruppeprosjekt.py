@@ -3,7 +3,7 @@ from datetime import datetime
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 
-filnavn_øving_7 = "CSV_fil_Vær_2014_2024/sinnes_2014_2025.csv"
+filnavn_øving_7 = "CSV_fil_Vær_2014_2024/sinnes_2014_2025_med_makstemperatur.csv"
 
 filnavn_oslo = "Værstasjon_Oving_10/oslo_blindern_1954_2025_med_makstemperatur (2).csv"
 filnavn_røros = "Værstasjon_Oving_10/roeros_1954_2025_med_makstemperatur (2).csv"
