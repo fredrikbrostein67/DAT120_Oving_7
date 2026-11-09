@@ -230,6 +230,97 @@ plot5.set_ylabel("mm")
 plot5.xaxis.set_major_locator(mdates.YearLocator())
 plot5.xaxis.set_major_formatter(mdates.DateFormatter("%Y"))
 plot5.grid(True)
+
+
+#--------------------------- Oppgave B ----------------------------------
+
+# Lister for årstall og antall dager
+liste_aar = []
+liste_sommerdager = []
+liste_hoysommerdager = []
+liste_tropedager = []
+
+# Ordbok for å lagre antall dager per år
+dager_per_aar = {}
+
+try:
+    with open(filnavn_oslo, "r", encoding="UTF-8") as csv_fil:
+
+        # Hopper over første linje
+        next(csv_fil)
+
+        for linje in csv_fil:
+            linje = linje.strip()
+            data = linje.split(";")
+
+            # Sjekker at linjen har nok kolonner
+            if len(data) < 5:
+                continue
+
+            try:
+                # Henter dato og årstall
+                dato = datetime.strptime(data[2], "%d.%m.%Y")
+                aar = dato.year
+
+                # Henter maksimaltemperatur
+                temperatur = float(data[4].replace(",", "."))
+
+            except (ValueError, IndexError):
+                continue
+
+            # Lager plass til hvert år
+            if aar not in dager_per_aar:
+                dager_per_aar[aar] = [0, 0, 0]
+
+            # Teller sommerdager over 20 grader
+            if temperatur > 20:
+                dager_per_aar[aar][0] += 1
+
+            # Teller høysommerdager over 25 grader
+            if temperatur > 25:
+                dager_per_aar[aar][1] += 1
+
+            # Teller tropedager over 30 grader
+            if temperatur > 30:
+                dager_per_aar[aar][2] += 1
+
+    # Sorterer årstallene
+    liste_aar = sorted(dager_per_aar.keys())
+
+    # Legger resultatene i egne lister
+    for aar in liste_aar:
+        liste_sommerdager.append(dager_per_aar[aar][0])
+        liste_hoysommerdager.append(dager_per_aar[aar][1])
+        liste_tropedager.append(dager_per_aar[aar][2])
+
+    # Lager plott
+    plt.figure(figsize=(15, 8))
+
+    plt.plot(liste_aar, liste_sommerdager,
+             label="Sommerdager", color="tab:orange")
+
+    plt.plot(liste_aar, liste_hoysommerdager,
+             label="Høysommerdager", color="tab:red")
+
+    plt.plot(liste_aar, liste_tropedager,
+             label="Tropedager", color="tab:blue")
+
+    plt.title("Sommerdager, høysommerdager og tropedager - Oslo Blindern")
+    plt.xlabel("År")
+    plt.ylabel("Antall dager")
+
+    plt.legend()
+    plt.grid(True)
+    plt.tight_layout()
+    plt.show()
+
+except FileNotFoundError:
+    print("Finner ikke CSV-filen for Oslo Blindern")
+
+#--------------------------- Slutt oppgave B ----------------------------
+
+
+
 # =====================================================================
 # OPPGAVE C - TEMPERATURSAMMENLIKNING
 # =====================================================================
@@ -388,6 +479,102 @@ akse_temp.grid(True)
 
 # Tilpasser grafen
 plt.tight_layout()
+
+
+
+# =====================================================================
+# OPPGAVE D - VINDSTATISTIKK
+# =====================================================================
+
+from statistics import median
+
+# Lager en ordbok med en liste for hver måned
+vind_per_maaned = {}
+
+for maaned in range(1, 13):
+    vind_per_maaned[maaned] = []
+
+try:
+    # Leser værdata fra Oslo Blindern
+    with open(filnavn_oslo, "r", encoding="UTF-8") as csv_fil:
+
+        # Hopper over første linje
+        next(csv_fil)
+
+        for linje in csv_fil:
+            data = linje.strip().split(";")
+
+            # Sjekker at linjen inneholder nok kolonner
+            if len(data) < 7:
+                continue
+
+            try:
+                # Leser dato og finner måneden
+                dato = datetime.strptime(data[2], "%d.%m.%Y")
+                maaned = dato.month
+
+                # Leser vindstyrken
+                vind = float(data[6].replace(",", "."))
+
+            except (ValueError, IndexError):
+                continue
+
+            # Legger vindmålingen til riktig måned
+            vind_per_maaned[maaned].append(vind)
+
+    # Lister for resultatene
+    maaneder = []
+    minimum_vind = []
+    median_vind = []
+    maksimum_vind = []
+
+    # Regner ut statistikk for hver måned
+    for maaned in range(1, 13):
+
+        vind_liste = vind_per_maaned[maaned]
+
+        if len(vind_liste) > 0:
+            maaneder.append(maaned)
+            minimum_vind.append(min(vind_liste))
+            median_vind.append(median(vind_liste))
+            maksimum_vind.append(max(vind_liste))
+
+    # Lager diagrammet
+    plt.figure(figsize=(12, 6))
+
+    plt.plot(maaneder, minimum_vind,
+             marker="o", label="Minimum vind")
+
+    plt.plot(maaneder, median_vind,
+             marker="o", label="Median vind")
+
+    plt.plot(maaneder, maksimum_vind,
+             marker="o", label="Maksimum vind")
+
+    plt.title("Vindstatistikk per måned - Oslo Blindern")
+    plt.xlabel("Måned")
+    plt.ylabel("Vindstyrke (m/s)")
+
+    plt.xticks(range(1, 13), [
+        "Jan", "Feb", "Mar", "Apr", "Mai", "Jun",
+        "Jul", "Aug", "Sep", "Okt", "Nov", "Des"
+    ])
+
+    plt.legend()
+    plt.grid(True)
+    plt.tight_layout()
+
+except FileNotFoundError:
+    print("Finner ikke CSV-filen for Oslo Blindern")
+
+# Viser alle diagrammene
+plt.show()
+
+# =====================================================================
+# SLUTT OPPGAVE D
+# =====================================================================
+
+
 # ---------------- Oppgave e: Skisesonger ----------------
 
 def skisesonger(filnavn):
